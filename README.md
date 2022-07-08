@@ -1,5 +1,5 @@
 # baby-coin
-Bitcoin principles implemenetation in Rust
+Bitcoin principles implementation in Rust
 
 # Blocks
 * Block structure
