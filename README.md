@@ -5,7 +5,6 @@ Bitcoin principles / concepts implementation in Rust.
 * Block structure
 * Block construction
 * Block mining
-* Block validation
 
 # Transaction
 * Transaction structure
@@ -14,6 +13,7 @@ Bitcoin principles / concepts implementation in Rust.
 
 
 # Blockchain
+* Block validation
 * blocks chaining = Ledger
 * Adding a block to the ledger
 * Constructing a block candidate from tx pool
