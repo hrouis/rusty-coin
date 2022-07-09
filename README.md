@@ -24,7 +24,7 @@ Bitcoin principles / concepts implementation in Rust.
 * Address generation and storage.
 
 # Advanced concepts
-* P2P connection , discovery.
+* P2P connection, discovery.
 * Transactions and blocks broadcasting and propagation.
 * MemPool for transactions and blocks.
 * Merkle tree computation and merkle root.
