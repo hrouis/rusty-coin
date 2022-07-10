@@ -33,7 +33,7 @@ impl Blockchain {
                 //TODO error reject transaction input not spendable
             }
         }
-        //TODO complete the valdation process ( see spec document)
+        //TODO complete the validation process ( see spec document)
         self.transaction_pool.push(transaction);
     }
 }
