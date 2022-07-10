@@ -1,4 +1,4 @@
-use super::{Hash, Hashable};
+use super::Hashable;
 
 use super::Address;
 use super::TimeStamp;
