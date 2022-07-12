@@ -1,7 +1,7 @@
 use std::cmp;
 use std::collections::HashSet;
 
-use super::{Hashable, now, Transaction};
+use super::{Hashable, now, Transaction, TxOutput};
 use super::Block;
 use super::Hash;
 
@@ -39,7 +39,7 @@ impl Blockchain {
         self.transaction_pool.push(transaction);
     }
 
-    pub fn create_candidate_block(&mut self, transactions_count: usize) -> Block {
+    pub fn create_candidate_block(&mut self, transactions_count: usize, miner_address: String) -> Block {
         let mut candidate_index: u32 = 0;
         let mut previous_hash: Hash = Vec::new();
         if let Some(latest_block) = self.blocks.last().cloned() {
@@ -49,8 +49,23 @@ impl Blockchain {
         //Get transactions from pool up to transactions count
         let pool_size = self.transaction_pool.len();
         let block_transaction_count = cmp::min(pool_size, transactions_count);
-        let transactions: Vec<Transaction> = self.transaction_pool
-            .drain(..block_transaction_count).collect();
+        let mut transactions: Vec<Transaction> = Vec::new();
+
+        // Add coinbase transaction
+        let coinbase = Transaction {
+            inputs: vec![],
+            outputs: vec![
+                TxOutput {
+                    address: miner_address,
+                    value: 50,
+                },
+            ],
+            timestamp: now(),
+        };
+        transactions.push(coinbase);
+
+        transactions.extend(self.transaction_pool
+            .drain(..block_transaction_count).collect::<Vec<Transaction>>());
         let mut block = Block::new(candidate_index, now(), vec![],
                                    previous_hash, 0, 0, transactions);
         block.hash = block.hash();

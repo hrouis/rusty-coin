@@ -4,6 +4,7 @@ pub use crate::block::Block;
 pub use crate::blockchain::Blockchain;
 pub use crate::hashable::Hashable;
 pub use crate::transaction::Transaction;
+pub use crate::transaction::TxOutput;
 
 pub fn now() -> u128 {
     let duration = SystemTime::now()
