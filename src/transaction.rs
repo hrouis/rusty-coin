@@ -3,11 +3,13 @@ use super::Hashable;
 use super::Address;
 use super::TimeStamp;
 
+#[derive(Debug, Clone)]
 pub struct TxOutput {
     pub address: Address,
     pub value: u64,
 }
 
+#[derive(Debug, Clone)]
 pub struct Transaction {
     pub inputs: Vec<TxOutput>,
     pub outputs: Vec<TxOutput>,

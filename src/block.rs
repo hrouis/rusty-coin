@@ -3,6 +3,7 @@ use super::TimeStamp;
 use super::Transaction;
 use super::Hashable;
 
+#[derive(Debug, Clone)]
 pub struct Block {
     pub index: u32,
     pub timestamp: TimeStamp,
