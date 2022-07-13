@@ -73,7 +73,17 @@ impl Blockchain {
         if !potential_coinbase.is_coinbase() {
             //TODO raise error first Tx is not coinbase
         }
+        let mut output_spent = Vec::new();
+        let mut output_created = Vec::new();
+        block.transactions.iter().map(|transaction|
+            {
+                output_spent.extend(transaction.input_hashes());
+                output_created.extend(transaction.output_hashes());
+            });
 
+        // Update unspent output vector
+        self.unspent_output.retain(|output |!output_spent.contains(output));
+        self.unspent_output.extend(output_created);
         self.blocks.push(block);
     }
 
@@ -83,9 +93,7 @@ impl Blockchain {
             //TODO error reject transaction output greater than input
         }
         // check inputs are valid (unspent output in block)
-        let input_hashes = transaction.inputs.iter()
-            .map(|input| input.hash())
-            .collect::<Vec<Hash>>();
+        let input_hashes = transaction.input_hashes();
         for hash in input_hashes {
             if !self.unspent_output.contains(&hash) {
                 //TODO error reject transaction input not spendable

@@ -1,6 +1,7 @@
-use super::Hashable;
+use crate::Hash;
 
 use super::Address;
+use super::Hashable;
 use super::TimeStamp;
 
 #[derive(Debug, Clone)]
@@ -31,6 +32,18 @@ impl Transaction {
 
     pub fn is_coinbase(&self) -> bool {
         self.inputs.len() == 0
+    }
+
+    pub fn input_hashes(&self) -> Vec<Hash> {
+        self.inputs.iter()
+            .map(|input| input.hash())
+            .collect::<Vec<Hash>>()
+    }
+
+    pub fn output_hashes(&self) -> Vec<Hash> {
+        self.outputs.iter()
+            .map(|output| output.hash())
+            .collect::<Vec<Hash>>()
     }
 }
 
