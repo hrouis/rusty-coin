@@ -1,3 +1,4 @@
+use crate::check_difficulty;
 use super::Hash;
 use super::TimeStamp;
 use super::Transaction;
@@ -55,8 +56,4 @@ impl Block {
             }
         }
     }
-}
-
-fn check_difficulty(hash: &Hash, target: u128) -> bool {
-    super::difficulty_bytes_as_u128(hash) < target
 }

@@ -1,6 +1,8 @@
 use std::cmp;
 use std::collections::HashSet;
 
+use crate::check_difficulty;
+
 use super::{Hashable, now, Transaction, TxOutput};
 use super::Block;
 use super::Hash;
@@ -21,20 +23,11 @@ impl Blockchain {
     }
 
     pub fn add_transaction_to_pool(&mut self, transaction: Transaction) {
-        // validate transaction
-        // check if transaction is spendable
-        if !transaction.is_spendable() {
-            //TODO error reject transaction output greater than input
+        // verify transaction
+        if !self.verify_transaction(&transaction) {
+            return;
         }
-        // check inputs are valid (unspent output in block)
-        let input_hashes = transaction.inputs.iter()
-            .map(|input| input.hash())
-            .collect::<Vec<Hash>>();
-        for hash in input_hashes {
-            if !self.unspent_output.contains(&hash) {
-                //TODO error reject transaction input not spendable
-            }
-        }
+
         //TODO complete the validation process ( see spec document)
         self.transaction_pool.push(transaction);
     }
@@ -70,5 +63,34 @@ impl Blockchain {
                                    previous_hash, 0, 0, transactions);
         block.hash = block.hash();
         block
+    }
+
+    pub fn aggregate_mined_block(&mut self, block: Block) {
+        if !check_difficulty(&block.hash, block.difficulty) {
+            //TODO raise error block is not mined, does not satisfy POW condition
+        }
+        let potential_coinbase = block.transactions.first().unwrap();
+        if !potential_coinbase.is_coinbase() {
+            //TODO raise error first Tx is not coinbase
+        }
+
+        self.blocks.push(block);
+    }
+
+    fn verify_transaction(&self, transaction: &Transaction) -> bool {
+        // check if transaction is spendable
+        if !transaction.is_spendable() {
+            //TODO error reject transaction output greater than input
+        }
+        // check inputs are valid (unspent output in block)
+        let input_hashes = transaction.inputs.iter()
+            .map(|input| input.hash())
+            .collect::<Vec<Hash>>();
+        for hash in input_hashes {
+            if !self.unspent_output.contains(&hash) {
+                //TODO error reject transaction input not spendable
+            }
+        }
+        true
     }
 }

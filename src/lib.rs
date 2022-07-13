@@ -32,6 +32,9 @@ pub fn difficulty_bytes_as_u128(v: &Vec<u8>) -> u128 {
         ((v[31] as u128) << 0x0 * 8)
 }
 
+fn check_difficulty(hash: &Hash, target: u128) -> bool {
+    difficulty_bytes_as_u128(hash) < target
+}
 
 type Hash = Vec<u8>;
 type Address = String;
