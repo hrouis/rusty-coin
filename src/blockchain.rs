@@ -75,14 +75,17 @@ impl Blockchain {
         }
         let mut output_spent = Vec::new();
         let mut output_created = Vec::new();
-        block.transactions.iter().map(|transaction|
-            {
-                output_spent.extend(transaction.input_hashes());
-                output_created.extend(transaction.output_hashes());
-            });
+
+        for transaction in block.transactions.iter() {
+            if !self.verify_transaction(transaction) {
+                //TODO raise error transaction not verified
+            }
+            output_spent.extend(transaction.input_hashes());
+            output_created.extend(transaction.output_hashes());
+        }
 
         // Update unspent output vector
-        self.unspent_output.retain(|output |!output_spent.contains(output));
+        self.unspent_output.retain(|output| !output_spent.contains(output));
         self.unspent_output.extend(output_created);
         self.blocks.push(block);
     }
@@ -98,7 +101,13 @@ impl Blockchain {
             if !self.unspent_output.contains(&hash) {
                 //TODO error reject transaction input not spendable
             }
+            let tx_pool_hashes = self.transaction_pool.iter()
+                .flat_map(|transaction| transaction.input_hashes()).collect::<HashSet<Hash>>();
+            if tx_pool_hashes.contains(&hash) {
+                //TODO error reject transaction double spending attempt
+            }
         }
         true
     }
 }
+
