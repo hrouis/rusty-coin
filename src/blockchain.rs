@@ -94,17 +94,20 @@ impl Blockchain {
         // check if transaction is spendable
         if !transaction.is_spendable() {
             //TODO error reject transaction output greater than input
+            return false;
         }
         // check inputs are valid (unspent output in block)
         let input_hashes = transaction.input_hashes();
         for hash in input_hashes {
             if !self.unspent_output.contains(&hash) {
                 //TODO error reject transaction input not spendable
+               return false;
             }
             let tx_pool_hashes = self.transaction_pool.iter()
                 .flat_map(|transaction| transaction.input_hashes()).collect::<HashSet<Hash>>();
             if tx_pool_hashes.contains(&hash) {
                 //TODO error reject transaction double spending attempt
+                return false;
             }
         }
         true
