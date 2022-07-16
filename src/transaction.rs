@@ -7,7 +7,7 @@ use super::TimeStamp;
 #[derive(Debug, Clone)]
 pub struct TxOutput {
     pub address: Address,
-    pub value: u64,
+    pub value: f64,
 }
 
 #[derive(Debug, Clone)]
@@ -18,11 +18,11 @@ pub struct Transaction {
 }
 
 impl Transaction {
-    fn compute_inputs(&self) -> u64 {
+    fn compute_inputs(&self) -> f64 {
         self.inputs.iter().map(|input| input.value).sum()
     }
 
-    fn compute_outputs(&self) -> u64 {
+    fn compute_outputs(&self) -> f64 {
         self.outputs.iter().map(|output| output.value).sum()
     }
 

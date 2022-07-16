@@ -41,7 +41,7 @@ type Address = String;
 type TimeStamp = u128;
 
 
-mod block;
-mod transaction;
-mod hashable;
-mod blockchain;
+pub mod block;
+pub mod transaction;
+pub mod hashable;
+pub mod blockchain;

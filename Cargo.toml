@@ -7,3 +7,7 @@ edition = "2021"
 
 [dependencies]
 crypto-hash = "0.3.3"
+
+[lib]
+name = "baby_coin"
+path = "src/lib.rs"

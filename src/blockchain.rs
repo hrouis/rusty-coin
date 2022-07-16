@@ -65,7 +65,7 @@ impl Blockchain {
             outputs: vec![
                 TxOutput {
                     address: miner_address,
-                    value: 50,
+                    value: 50.0,
                 },
             ],
             timestamp: now(),
@@ -131,3 +131,49 @@ impl Blockchain {
     }
 }
 
+//Testing
+
+#[cfg(test)]
+mod tests {
+    use crate::{Blockchain, Hashable, now, Transaction, TxOutput};
+
+    #[test]
+    fn add_transaction_to_pool()
+    {
+        // Given
+        let mut blockchain: Blockchain = Blockchain::new();
+        let unspent_outputs = vec![
+            TxOutput {
+                address: String::from("Alice"),
+                value: 10.0,
+            },
+            TxOutput {
+                address: String::from("Alice"),
+                value: 20.0,
+            }];
+        blockchain.unspent_output.extend(unspent_outputs.iter().map(|output| output.hash()));
+        let transaction = Transaction {
+            inputs: unspent_outputs,
+            outputs: vec![
+                TxOutput {
+                    address: String::from("Bob"),
+                    value: 25.0,
+                },
+                TxOutput {
+                    address: String::from("Bob"),
+                    value: 4.995,
+                },
+            ],
+            timestamp: now(),
+        };
+
+        blockchain.add_transaction_to_pool(transaction).unwrap();
+    }
+
+    #[test]
+    fn should_create_candidate_block() {
+        let mut blockchain: Blockchain = Blockchain::new();
+        let block = blockchain.create_candidate_block(5, String::from("Alice"));
+        println!("{:?}", block);
+    }
+}
