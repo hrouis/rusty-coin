@@ -1,7 +1,6 @@
 use std::cmp;
 use std::collections::HashSet;
 
-use crate::blockchain::BlockChainError::{DoubleSpendingError, InputNotSpendableError, InsufficientFundsError, ProofOfWorkError};
 use crate::check_difficulty;
 
 use super::{Hashable, now, Transaction, TxOutput};
@@ -83,19 +82,17 @@ impl Blockchain {
 
     pub fn aggregate_mined_block(&mut self, block: Block) -> Result<(), BlockChainError> {
         if !check_difficulty(&block.hash, block.difficulty) {
-            //TODO raise error block is not mined, does not satisfy POW condition
-            return Err(ProofOfWorkError(String::from("Block is not correctly mined")));
+            return Err(BlockChainError::ProofOfWorkError(String::from("Block is not correctly mined")));
         }
         let potential_coinbase = block.transactions.first().unwrap();
         if !potential_coinbase.is_coinbase() {
-            //TODO raise error first Tx is not coinbase
+            return Err(BlockChainError::NotACoinBaseError(String::from("First transaction in block must be a coinbase.")));
         }
         let mut output_spent = Vec::new();
         let mut output_created = Vec::new();
 
         for transaction in block.transactions.iter() {
             match self.verify_transaction(transaction) {
-                //TODO raise error transaction not verified
                 Ok(()) => println!("transaction verified"),
                 Err(e) => return Err(e),
             }
@@ -113,21 +110,21 @@ impl Blockchain {
     fn verify_transaction(&self, transaction: &Transaction) -> Result<(), BlockChainError> {
         // check if transaction is spendable
         if !transaction.is_spendable() {
-            //TODO error reject transaction output greater than input
-            return Err(InsufficientFundsError(String::from("Transaction output is grater than input.")));
+            return Err(BlockChainError::InsufficientFundsError(
+                String::from("Transaction output is grater than input.")));
         }
         // check inputs are valid (unspent output in block)
         let input_hashes = transaction.input_hashes();
         for hash in input_hashes {
             if !self.unspent_output.contains(&hash) {
-                //TODO error reject transaction input not spendable
-                return Err(InputNotSpendableError(String::from("Input is not spendable.")));
+                return Err(BlockChainError::InputNotSpendableError(
+                    String::from("Input is not spendable.")));
             }
             let tx_pool_hashes = self.transaction_pool.iter()
                 .flat_map(|transaction| transaction.input_hashes()).collect::<HashSet<Hash>>();
             if tx_pool_hashes.contains(&hash) {
-                //TODO error reject transaction double spending attempt
-                return Err(DoubleSpendingError(String::from("Double spending attempt.")));
+                return Err(BlockChainError::DoubleSpendingError(
+                    String::from("Double spending attempt.")));
             }
         }
         return Ok(());
