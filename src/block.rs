@@ -1,8 +1,9 @@
 use crate::check_difficulty;
+
 use super::Hash;
+use super::Hashable;
 use super::TimeStamp;
 use super::Transaction;
-use super::Hashable;
 
 #[derive(Debug, Clone)]
 pub struct Block {
@@ -16,7 +17,7 @@ pub struct Block {
 }
 
 impl Hashable for Block {
-    fn bytes( &self) -> Vec<u8> {
+    fn bytes(&self) -> Vec<u8> {
         let mut block_bytes = vec![];
         block_bytes.extend(&self.index.to_le_bytes());
         block_bytes.extend(&self.prev_block_hash);
@@ -29,18 +30,16 @@ impl Block {
     pub fn new(
         index: u32,
         timestamp: u128,
-        hash: Hash,
         prev_block_hash: Hash,
-        nonce: u64,
-        difficulty: u128,
         transactions: Vec<Transaction>,
+        difficulty: u128,
     ) -> Self {
         Block {
             index,
             timestamp,
-            hash,
+            hash: vec![0; 32],
             prev_block_hash,
-            nonce,
+            nonce: 0,
             difficulty,
             transactions,
         }

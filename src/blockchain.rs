@@ -18,7 +18,7 @@ pub enum BlockChainError {
 }
 
 pub struct Blockchain {
-    pub blocks: Vec<Block>,
+    blocks: Vec<Block>,
     transaction_pool: Vec<Transaction>,
     unspent_output: HashSet<Hash>,
 }
@@ -74,8 +74,8 @@ impl Blockchain {
 
         transactions.extend(self.transaction_pool
             .drain(..block_transaction_count).collect::<Vec<Transaction>>());
-        let mut block = Block::new(candidate_index, now(), vec![],
-                                   previous_hash, 0, 0, transactions);
+        let mut block = Block::new(candidate_index, now(),
+                                   previous_hash, transactions, 0);
         block.hash = block.hash();
         block
     }
@@ -84,26 +84,29 @@ impl Blockchain {
         if !check_difficulty(&block.hash, block.difficulty) {
             return Err(BlockChainError::ProofOfWorkError(String::from("Block is not correctly mined")));
         }
-        let potential_coinbase = block.transactions.first().unwrap();
-        if !potential_coinbase.is_coinbase() {
-            return Err(BlockChainError::NotACoinBaseError(String::from("First transaction in block must be a coinbase.")));
-        }
-        let mut output_spent = Vec::new();
-        let mut output_created = Vec::new();
-
-        for transaction in block.transactions.iter() {
-            match self.verify_transaction(transaction) {
-                Ok(()) => println!("transaction verified"),
-                Err(e) => return Err(e),
+        if let Some((coinbase, transactions)) = block.transactions.split_first() {
+            if !coinbase.is_coinbase() {
+                return Err(BlockChainError::NotACoinBaseError(String::
+                from("First transaction in block must be a coinbase.")));
             }
-            output_spent.extend(transaction.input_hashes());
-            output_created.extend(transaction.output_hashes());
-        }
 
-        // Update unspent output vector
-        self.unspent_output.retain(|output| !output_spent.contains(output));
-        self.unspent_output.extend(output_created);
-        self.blocks.push(block);
+            let mut output_spent = Vec::new();
+            let mut output_created = Vec::new();
+
+            for transaction in transactions {
+                match self.verify_transaction(transaction) {
+                    Ok(()) => println!("transaction verified"),
+                    Err(e) => return Err(e),
+                }
+                output_spent.extend(transaction.input_hashes());
+                output_created.extend(transaction.output_hashes());
+            }
+
+            // Update unspent output vector
+            self.unspent_output.retain(|output| !output_spent.contains(output));
+            self.unspent_output.extend(output_created);
+            self.blocks.push(block);
+        }
         Ok(())
     }
 
@@ -128,6 +131,10 @@ impl Blockchain {
             }
         }
         return Ok(());
+    }
+
+    pub fn len(&self) -> usize {
+        self.blocks.len()
     }
 }
 
@@ -168,6 +175,8 @@ mod tests {
         };
 
         blockchain.add_transaction_to_pool(transaction).unwrap();
+        assert_eq!(1, blockchain.transaction_pool.len());
+        assert_eq!(2, blockchain.unspent_output.len());
     }
 
     #[test]
