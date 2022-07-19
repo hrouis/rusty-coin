@@ -35,13 +35,15 @@ impl Transaction {
     }
 
     pub fn input_hashes(&self) -> Vec<Hash> {
-        self.inputs.iter()
+        self.inputs
+            .iter()
             .map(|input| input.hash())
             .collect::<Vec<Hash>>()
     }
 
     pub fn output_hashes(&self) -> Vec<Hash> {
-        self.outputs.iter()
+        self.outputs
+            .iter()
             .map(|output| output.hash())
             .collect::<Vec<Hash>>()
     }
@@ -59,14 +61,18 @@ impl Hashable for TxOutput {
 impl Hashable for Transaction {
     fn bytes(&self) -> Vec<u8> {
         let mut tx_output = vec![];
-        tx_output.extend(self.inputs
-            .iter()
-            .flat_map(|input| input.bytes())
-            .collect::<Vec<u8>>());
-        tx_output.extend(self.outputs
-            .iter()
-            .flat_map(|output| output.bytes())
-            .collect::<Vec<u8>>());
+        tx_output.extend(
+            self.inputs
+                .iter()
+                .flat_map(|input| input.bytes())
+                .collect::<Vec<u8>>(),
+        );
+        tx_output.extend(
+            self.outputs
+                .iter()
+                .flat_map(|output| output.bytes())
+                .collect::<Vec<u8>>(),
+        );
         tx_output
     }
 }

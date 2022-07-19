@@ -1,11 +1,13 @@
 use std::cmp;
 use std::collections::HashSet;
 
+use primitive_types::U256;
+
 use crate::check_difficulty;
 
-use super::{Hashable, now, Transaction, TxOutput};
 use super::Block;
 use super::Hash;
+use super::{now, Transaction, TxOutput};
 
 #[derive(Debug)]
 pub enum BlockChainError {
@@ -20,7 +22,7 @@ pub enum BlockChainError {
 pub struct Blockchain {
     blocks: Vec<Block>,
     transaction_pool: Vec<Transaction>,
-    unspent_output: HashSet<Hash>,
+    pub unspent_output: HashSet<Hash>,
 }
 
 impl Blockchain {
@@ -32,7 +34,10 @@ impl Blockchain {
         }
     }
 
-    pub fn add_transaction_to_pool(&mut self, transaction: Transaction) -> Result<(), BlockChainError> {
+    pub fn add_transaction_to_pool(
+        &mut self,
+        transaction: Transaction,
+    ) -> Result<(), BlockChainError> {
         // verify transaction
         match self.verify_transaction(&transaction) {
             Ok(()) => println!("transaction verified"),
@@ -47,7 +52,12 @@ impl Blockchain {
         Ok(())
     }
 
-    pub fn create_candidate_block(&mut self, transactions_count: usize, miner_address: String) -> Block {
+    pub fn create_candidate_block(
+        &mut self,
+        transactions_count: usize,
+        miner_address: String,
+        difficulty: U256,
+    ) -> Block {
         let mut candidate_index: u32 = 0;
         let mut previous_hash: Hash = Vec::new();
         if let Some(latest_block) = self.blocks.last().cloned() {
@@ -62,36 +72,45 @@ impl Blockchain {
         // Add coinbase transaction
         let coinbase = Transaction {
             inputs: vec![],
-            outputs: vec![
-                TxOutput {
-                    address: miner_address,
-                    value: 50.0,
-                },
-            ],
+            outputs: vec![TxOutput {
+                address: miner_address,
+                value: 50.0,
+            }],
             timestamp: now(),
         };
         transactions.push(coinbase);
 
-        transactions.extend(self.transaction_pool
-            .drain(..block_transaction_count).collect::<Vec<Transaction>>());
-        let mut block = Block::new(candidate_index, now(),
-                                   previous_hash, transactions, 0);
-        block.hash = block.hash();
-        block
+        transactions.extend(
+            self.transaction_pool
+                .drain(..block_transaction_count)
+                .collect::<Vec<Transaction>>(),
+        );
+        Block::new(
+            candidate_index + 1,
+            now(),
+            previous_hash,
+            transactions,
+            difficulty,
+        )
     }
 
     pub fn aggregate_mined_block(&mut self, block: Block) -> Result<(), BlockChainError> {
         if !check_difficulty(&block.hash, block.difficulty) {
-            return Err(BlockChainError::ProofOfWorkError(String::from("Block is not correctly mined")));
+            return Err(BlockChainError::ProofOfWorkError(String::from(
+                "Block is not correctly mined",
+            )));
         }
         if let Some((coinbase, transactions)) = block.transactions.split_first() {
             if !coinbase.is_coinbase() {
-                return Err(BlockChainError::NotACoinBaseError(String::
-                from("First transaction in block must be a coinbase.")));
+                return Err(BlockChainError::NotACoinBaseError(String::from(
+                    "First transaction in block must be a coinbase.",
+                )));
             }
 
             let mut output_spent = Vec::new();
             let mut output_created = Vec::new();
+            // Add coinbase output
+            output_created.extend(coinbase.output_hashes());
 
             for transaction in transactions {
                 match self.verify_transaction(transaction) {
@@ -103,7 +122,8 @@ impl Blockchain {
             }
 
             // Update unspent output vector
-            self.unspent_output.retain(|output| !output_spent.contains(output));
+            self.unspent_output
+                .retain(|output| !output_spent.contains(output));
             self.unspent_output.extend(output_created);
             self.blocks.push(block);
         }
@@ -113,21 +133,27 @@ impl Blockchain {
     fn verify_transaction(&self, transaction: &Transaction) -> Result<(), BlockChainError> {
         // check if transaction is spendable
         if !transaction.is_spendable() {
-            return Err(BlockChainError::InsufficientFundsError(
-                String::from("Transaction output is grater than input.")));
+            return Err(BlockChainError::InsufficientFundsError(String::from(
+                "Transaction output is grater than input.",
+            )));
         }
         // check inputs are valid (unspent output in block)
         let input_hashes = transaction.input_hashes();
         for hash in input_hashes {
             if !self.unspent_output.contains(&hash) {
-                return Err(BlockChainError::InputNotSpendableError(
-                    String::from("Input is not spendable.")));
+                return Err(BlockChainError::InputNotSpendableError(String::from(
+                    "Input is not spendable.",
+                )));
             }
-            let tx_pool_hashes = self.transaction_pool.iter()
-                .flat_map(|transaction| transaction.input_hashes()).collect::<HashSet<Hash>>();
+            let tx_pool_hashes = self
+                .transaction_pool
+                .iter()
+                .flat_map(|transaction| transaction.input_hashes())
+                .collect::<HashSet<Hash>>();
             if tx_pool_hashes.contains(&hash) {
-                return Err(BlockChainError::DoubleSpendingError(
-                    String::from("Double spending attempt.")));
+                return Err(BlockChainError::DoubleSpendingError(String::from(
+                    "Double spending attempt.",
+                )));
             }
         }
         return Ok(());
@@ -142,11 +168,12 @@ impl Blockchain {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Blockchain, Hashable, now, Transaction, TxOutput};
+    use primitive_types::U256;
+
+    use crate::{now, Blockchain, Hashable, Transaction, TxOutput};
 
     #[test]
-    fn add_transaction_to_pool()
-    {
+    fn add_transaction_to_pool() {
         // Given
         let mut blockchain: Blockchain = Blockchain::new();
         let unspent_outputs = vec![
@@ -157,8 +184,11 @@ mod tests {
             TxOutput {
                 address: String::from("Alice"),
                 value: 20.0,
-            }];
-        blockchain.unspent_output.extend(unspent_outputs.iter().map(|output| output.hash()));
+            },
+        ];
+        blockchain
+            .unspent_output
+            .extend(unspent_outputs.iter().map(|output| output.hash()));
         let transaction = Transaction {
             inputs: unspent_outputs,
             outputs: vec![
@@ -182,7 +212,7 @@ mod tests {
     #[test]
     fn should_create_candidate_block() {
         let mut blockchain: Blockchain = Blockchain::new();
-        let block = blockchain.create_candidate_block(5, String::from("Alice"));
+        let block = blockchain.create_candidate_block(5, String::from("Alice"), U256::max_value());
         println!("{:?}", block);
     }
 }
