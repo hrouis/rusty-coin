@@ -2,8 +2,8 @@ use std::str::FromStr;
 
 use primitive_types::U256;
 
-use baby_coin::blockchain::Blockchain;
-use baby_coin::{now, Block, Transaction, TxOutput};
+use rusty_coin::blockchain::Blockchain;
+use rusty_coin::{now, Block, Transaction, TxOutput};
 
 #[test]
 fn test_scenario_1() {
@@ -100,7 +100,7 @@ fn test_scenario_2() {
     let mut block = blockchain.create_candidate_block(1, String::from("Alice"), difficulty);
     block.mine();
 
-    // Validate block and add to ledgerunspent_outputs
+    // Validate block and add to ledger
     println!("Adding the new block {:?}", block);
     blockchain
         .aggregate_mined_block(block)
