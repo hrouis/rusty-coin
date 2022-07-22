@@ -2,8 +2,8 @@ use std::str::FromStr;
 
 use primitive_types::U256;
 
-use rusty_coin::blockchain::Blockchain;
-use rusty_coin::{now, Block, Transaction, TxOutput};
+use core::blockchain::Blockchain;
+use core::{now, Block, Transaction, TxOutput};
 
 #[test]
 fn test_scenario_1() {

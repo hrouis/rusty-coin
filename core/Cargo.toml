@@ -1,0 +1,14 @@
+[package]
+name = "rusty-coin-core"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+name = "core"
+path = "src/lib.rs"
+
+[dependencies]
+crypto-hash = "0.3.3"
+primitive-types = "0.11.1"
