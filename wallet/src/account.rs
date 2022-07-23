@@ -11,7 +11,7 @@ pub struct Account {
 impl Account {
     pub fn new() -> Self {
         let context = HashContext::new();
-        let (private_key, public_key) = hash_context.generate_key_pair();
+        let (private_key, public_key) = context.generate_key_pair();
 
         Account {
             private_key,
@@ -21,10 +21,10 @@ impl Account {
     }
 
     pub fn get_public_key(&self) -> PublicKey {
-        self.context.
+        self.public_key
     }
 
-    pub fn sign(&self) {
-        self.context.
+    pub fn sign(&self, message_slice: &[u8]) {
+        self.context.sign(&self.private_key, message_slice);
     }
 }
