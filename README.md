@@ -1,4 +1,4 @@
-# baby-coin
+# rusty-coin
 Bitcoin principles / concepts implementation in Rust.
 
 # Blocks
