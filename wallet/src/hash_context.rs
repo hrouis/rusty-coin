@@ -1,10 +1,12 @@
-use crypto::digest::Digest;
-use crypto::ripemd160::Ripemd160;
+use ripemd::Digest;
+use ripemd::Ripemd160;
 use secp256k1::ecdsa::Signature;
 use secp256k1::{All, Error, Message, PublicKey, Secp256k1, SecretKey};
+use sha256::digest_bytes;
 
 use crate::Address;
 
+#[derive(Debug)]
 pub struct HashContext {
     sec_p: Secp256k1<All>,
 }
@@ -20,16 +22,23 @@ impl HashContext {
         self.sec_p.generate_keypair(&mut rand::rngs::OsRng)
     }
 
-    pub fn generate_address(&self, pub_key: &PublicKey) -> Address {
-        let mut sha256 = crypto::sha2::Sha256::new();
-        sha256.input(&pub_key.serialize());
-        let mut result: [u8; 32] = [0; 32];
-        sha256.result(result.as_mut());
+    pub fn generate_address(&self, pub_key: &PublicKey, version: &[u8]) -> Address {
+        // SHA256 hashing
+        let sha256_hash = digest_bytes(&pub_key.serialize());
+        // RIPEMD160 hashing
         let mut ripemd160 = Ripemd160::new();
-        ripemd160.input(result.as_slice());
-        let mut address: [u8; 20] = [0; 20];
-        ripemd160.result(address.as_mut());
-        bs58::encode(address).into_vec()
+        ripemd160.update(sha256_hash.as_bytes());
+        let double_hash_result = ripemd160.finalize();
+        // add version
+        let mut payload: Vec<u8> = vec![];
+        payload.extend(version);
+        payload.extend(double_hash_result);
+        // double hash payload
+        let d_hash_payload = digest_bytes(digest_bytes(payload.as_slice()).as_bytes());
+        // Get first 4 bytes from double SHA256 hash
+        let payload_suffix = &d_hash_payload[..5];
+        payload.extend(payload_suffix.bytes());
+        bs58::encode(payload).into_vec()
     }
 
     pub fn sign(&self, key: &SecretKey, message_slice: &[u8]) -> Result<Signature, Error> {
