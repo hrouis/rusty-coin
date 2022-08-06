@@ -1,5 +1,6 @@
 [workspace]
 members = [
-"core",
-"wallet"
+    "core",
+    "wallet",
+    "database"
 ]
