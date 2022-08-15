@@ -1,16 +1,18 @@
+use serde::{Deserialize, Serialize};
+
 use crate::Hash;
 
 use super::Address;
 use super::Hashable;
 use super::TimeStamp;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TxOutput {
     pub address: Address,
     pub value: f64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Transaction {
     pub inputs: Vec<TxOutput>,
     pub outputs: Vec<TxOutput>,

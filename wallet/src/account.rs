@@ -37,12 +37,12 @@ impl Account {
     }
 
     pub fn to_wif(&self) -> Vec<u8> {
-        let mut extended_key = vec![u8];
-        extended_key.extend("0x80");
-        extended_key.extend(self.private_key);
+        let mut extended_key = vec![];
+        extended_key.extend(0x80_u32.to_le_bytes());
+        extended_key.extend(self.private_key.secret_bytes());
         let mut double_hash = digest_bytes(digest_bytes(&extended_key).as_bytes());
         let payload_suffix = &double_hash[..5];
-        extended_key.extend(payload_suffix);
+        extended_key.extend(payload_suffix.bytes());
         bs58::encode(extended_key).into_vec()
     }
 }
