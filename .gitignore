@@ -2,3 +2,4 @@
 .idea
 core/target
 wallet/target
+Cargo.lock
