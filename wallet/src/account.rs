@@ -1,4 +1,5 @@
 use secp256k1::{PublicKey, SecretKey};
+use sha256::digest_bytes;
 
 use crate::hash_context::HashContext;
 use crate::Address;
@@ -33,6 +34,16 @@ impl Account {
 
     pub fn sign(&self, message_slice: &[u8]) {
         self.context.sign(&self.private_key, message_slice);
+    }
+
+    pub fn to_wif(&self) -> Vec<u8> {
+        let mut extended_key = vec![u8];
+        extended_key.extend("0x80");
+        extended_key.extend(self.private_key);
+        let mut double_hash = digest_bytes(digest_bytes(&extended_key).as_bytes());
+        let payload_suffix = &double_hash[..5];
+        extended_key.extend(payload_suffix);
+        bs58::encode(extended_key).into_vec()
     }
 }
 
