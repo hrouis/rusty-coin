@@ -1,5 +1,7 @@
 # rusty-coin
 Bitcoin principles / concepts implementation in Rust.
+This is a snadbox project aimed at learning Rust and implementing some Bitcoin concepts.
+Not intended to be a full pledged client implementation and it will not be in the future.
 
 # Blocks
 * Block structure
