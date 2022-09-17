@@ -24,4 +24,5 @@ type TimeStamp = u128;
 pub mod block;
 pub mod blockchain;
 pub mod hashable;
+pub mod merkletree;
 pub mod transaction;
